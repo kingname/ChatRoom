@@ -1,2 +1,2 @@
 # ChatRoom
-A simple chat room based on Vue and Golang
+A simple chat room based on Vue and Flask

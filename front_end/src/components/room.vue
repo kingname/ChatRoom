@@ -30,65 +30,24 @@
           <div class="panel-title">匿名聊天群</div>
         </div>
         <div class="panel-body" style="overflow:auto;">
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
-          </div>
-          <div class="columns">
-            [<div class="user_name">张三</div>][<div class="text-gray">2018-09-08 18:00:00</div>]
-            :
-            <div class="float-left">测试asdfjkasdfaskldfdfjasdfjasdfjkasfkaskdsjf</div>
+          <div class="columns" v-for="c in msg" :key="c._id">
+            <div class="user_name">
+              <span class="label label-secondary" v-if="Cid != c.cid">{{c.username}}</span>
+              <span class="label label-success" v-else>{{c.username}}</span>
+            </div>
+            <div class="text-gray">
+              <span class="label">{{c.create_time}}</span>
+            </div>
+            <br />
+            <div class="float-right">{{c.content}}</div>
           </div>
         </div>
         <div class="panel-footer">
-          <form action="/submit" method="POST">
           <div class="input-group">
-            <input type="text" class="form-input col-2" name="username" placeholder="name">
-            <input type="text" class="form-input" name="content" placeholder="Hello">
-            <button class="btn btn-primary input-group-btn">Send</button>
+            <input v-model="userName" type="text" class="form-input col-2" placeholder="name">
+            <input v-model="Content" type="text" class="form-input" name="content" placeholder="Hello">
+            <button class="btn btn-primary input-group-btn" v-on:click="submit">Send</button>
           </div>
-          </form>
         </div>
       </div>
     </div>
@@ -101,7 +60,51 @@ export default {
   name: 'room',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      msg: [],
+      userName: '',
+      Content: '',
+      Cid: 0
+    }
+  },
+  mounted () {
+    this.Cid = this.$md5(Date.now().toString())
+    console.log(this.Cid)
+    this.get_content_list()
+  },
+  methods: {
+    scrollToEnd: function () {
+      var container = this.$el.querySelector('.panel-body')
+      console.log(container.scrollHeight)
+      container.scrollTop = container.scrollHeight
+    },
+    get_content_list: function () {
+      this.$ajax({
+        method: 'get',
+        url: '/content'
+      }).then(response => {
+        var data = response.data
+        this.msg = data
+        this.scrollToEnd()
+      })
+    },
+    submit: function () {
+      if (!this.userName.trim() || !this.Content.trim()) {
+        alert('姓名和内容不能为空！')
+      }
+      var ts = Date.now()
+      var time = new Date(ts)
+      var timeStr = time.getFullYear() + '-' + (time.getMonth() + 1) + '-' + time.getDate() + ' ' + time.getHours() + ':' + time.getMinutes() + ':' + time.getSeconds()
+      this.$ajax({
+        method: 'post',
+        url: '/submit',
+        data: {'username': this.userName, 'content': this.Content, 'create_time': timeStr, 'cid': this.Cid},
+        headers: {'Content-Type': 'application/json'}
+      }).then(response => {
+        if (response.data.result) {
+          this.get_content_list()
+          this.Content = ''
+        }
+      })
     }
   }
 }

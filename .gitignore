@@ -1,5 +1,9 @@
 # Binaries for programs and plugins
 *.exe
+.pyc
+__pycache__/
+.idea/
+.DS_Store
 *.dll
 *.so
 *.dylib
